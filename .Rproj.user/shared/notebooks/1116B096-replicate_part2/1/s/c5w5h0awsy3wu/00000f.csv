@@ -1,0 +1,7 @@
+"0","cb_tab = x %>% filter(choice>-1) %>% group_by(subjID, dec_type, judge_type) %>%"
+"0","  summarise(true_cb = mean(cbias, na.rm=T),"
+"0","            pred_cb = mean(cbias_pred, na.rm=T))"
+"0","cb_tab %>% "
+"0","  group_by(dec_type, judge_type) %>% "
+"0","  summarise(real_cb = mean(true_cb),"
+"0","            pred_cb = mean(pred_cb))"

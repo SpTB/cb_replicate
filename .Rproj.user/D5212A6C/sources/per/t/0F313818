@@ -1,0 +1,26 @@
+{
+    "id": "0F313818",
+    "path": "F:/cb_replicate/1.scripts/helper_funcs.R",
+    "project_path": "1.scripts/helper_funcs.R",
+    "type": "r_source",
+    "hash": "3417844156",
+    "contents": "",
+    "dirty": false,
+    "created": 1772395987722.0,
+    "source_on_save": false,
+    "relative_order": 4,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "62,1",
+        "scrollLine": "32"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1772759836,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1772759834801,
+    "read_only": false,
+    "read_only_alternatives": []
+}

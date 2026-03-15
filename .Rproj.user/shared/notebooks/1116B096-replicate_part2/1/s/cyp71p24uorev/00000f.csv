@@ -1,0 +1,8 @@
+"0","pars %>%"
+"0","  filter(par_class=='learning') %>% "
+"0","  filter(congruency=='inc') %>%"
+"0","  ggplot(aes(x=parameter, y=value, fill=parameter))+"
+"0","  ggdist::stat_eye(alpha=.6) +"
+"0"," # scale_x_discrete(labels = c(TeX('$u^{pref}_{con}$'), TeX(""$u^{size}_{con}$""))) +"
+"0","  scale_fill_manual(values = c(red1,blue1)) +"
+"0","  theme(text=element_text(size=20))"

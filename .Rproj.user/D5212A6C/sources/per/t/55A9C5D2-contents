@@ -1,0 +1,372 @@
+---
+title: "Replicating CIB Results"
+subtitle: "Part 1: Behavioral Analyses"
+author: Wojciech Zajkowski
+date: "2026-03-01"
+output: html_document
+---
+
+This notebook is designed for following the analyses performed in the paper *Choices bias evaluations across unrelated domains through cognitive consistency and value updating*. The task structure and motivation can be be found there.
+
+We first load the data from the 5 experiments:
+```{r}
+#install neccesary librarties
+#devtools::install_github('SpTB/cibtools')
+#devtools::install_github('SpTB/wztools')
+
+#load libraries
+library(cibtools)
+library(wztools)
+library(tidyverse)
+library(skimr)
+#devtools::load_all('H:/cibtools')
+#devtools::load_all('H:/wztools')
+
+
+#source most of the necessary dependencies
+#source('1.scripts/source_file.R')
+source('1.scripts/helper_funcs.R')
+
+# set loading and output graphics
+wztools::setOptions() 
+
+# get data
+data_path = '0.data'
+all = getDataR(type='main', path = data_path) # main task data
+rall = getDataR(type='rat', path = data_path) # rating data
+```
+
+*all* is a list of elements, each element containing preprocessed data from one experiment. Let's take a closer look:
+
+```{r}
+#head of the data
+all[[1]] %>% head()
+```
+
+Detailed column descriptions available in xx.. The most important ones we will be focusing are:
+ - judgement: the raw scale output [-100 to 100]
+ - xx
+  
+  
+*rall* contains pre and post-task ratings. Similarily to *all*, it is structured as a 5 element list, each containing a single experiment. 
+
+```{r}
+rall[[3]] %>% head()
+```
+
+## Overall CIB across experiments 
+
+CIB is defined as:
+
+$$
+CIB_t =
+\begin{cases} 
+J_t - (R_{d,right} - R_{d,left}) & \text{if $choice_t = right$}\\
+-(J_t - (R_{d,right} - R_{d,left})) & \text{if $choice_t = left$}
+\end{cases}
+$$
+
+where *J* is the judgment, *R* is the item rating mean from the pre-task ratings, and the indexes *t* and *d* represent the domain and trial, respecitvely. Intuitively, *CIB* represents how much the judgment is skewed towards the chosen item (right or left), taking the initial ratings as reference.
+
+To see if there are differences between left and right skew, we canalso look at the right-side bias *RB*:
+
+$$
+RB_t = J_t - (R_{d,right} - R_{d,left})
+$$
+
+Trial-level CIB is stored within the *Cbias* column. For EXPS 1-4, we can extract the summary statistics in a straightforward fashion:
+```{r}
+# extract individual experiments, for convenience
+e1 = all[[1]] # extract experiment 1
+e2 = all[[2]] 
+e3 = all[[3]]
+e4 = all[[4]]
+e5 = all[[5]]
+
+# simple calculation of CIB:
+#1. summarise per participant & condition type
+cib1 = e1 %>% group_by(subjID,con, judge_type2) %>% summarise(cib=mean(Cbias, na.rm=T))
+cib2 = e2 %>% group_by(subjID,con, judge_type2) %>% summarise(cib=mean(Cbias, na.rm=T))
+cib3 = e3 %>% group_by(subjID,con, judge_type2) %>% summarise(cib=mean(Cbias, na.rm=T))
+cib4 = e4 %>% group_by(subjID,con, judge_type2) %>% summarise(cib=mean(Cbias, na.rm=T))
+
+#2.Average across participants ('neu' condition means 'no choice'(EXP1,2,4,5), or 'forced choice'(EXP3))
+cib1 %>% group_by(con, judge_type2) %>% summarise(cib=mean(cib, na.rm=T))
+cib2 %>% group_by(con, judge_type2) %>% summarise(cib=mean(cib, na.rm=T))
+cib3 %>% group_by(con, judge_type2) %>% summarise(cib=mean(cib, na.rm=T))
+cib4 %>% group_by(con, judge_type2) %>% summarise(cib=mean(cib, na.rm=T))
+
+```
+In experiment 5 a reference factor was introduced. In each trial, one of the items was arbitrarily set to be the reference item, indroducing an additional influence: reference bias (here denoted as *Pbias*) which quantifies the point-bias towards the referenced item. To extract CIB, we need to control for the reference bias. Here, we start by estimating a subject-specific reference bias for each of the domains, then add/subtract to estimate CIB:
+
+```{r}
+pos_ref = e5 %>% filter(con=='neu') %>% 
+  group_by(subjID, judge_type2) %>% summarise(pos_ref = mean(Pbias, na.rm=T))
+
+cib5 = e5 %>% 
+  group_by(subjID, judge_type2 ,con, ref_type) %>%
+  summarise(CB = mean(Cbias, na.rm=T),
+            PB = mean(Pbias, na.rm=T)) %>%
+  inner_join(pos_ref) %>%
+  filter(con!='neu') %>%
+  mutate(cib = if_else(ref_type=='choice_inc',CB+pos_ref, CB-pos_ref))
+
+cib5 %>% group_by(con, judge_type2) %>% summarise(cib=mean(cib, na.rm=T))
+```
+
+
+## Consistency and Performance Quality
+
+In this section, we explore measures related to consistency (i.e. how consistent participants ratings/choices/judgments were across the experiment) and performance quality (*i.e.* accuracy). Since preference judgments are inherently subjective, accuracy only relates to the size-based responses, comparing them to the true size values. 
+
+### Correlations between objective and perceived size
+The first measure we calculate is the correlation between participant size ratings, and actual item sizes. A lack of significant correlations would suggest that participants did not understand the size rating instructions. We consider one session as a single data-point, averaging across correlations from the three ratings (2 pre and 1 post-task). 
+
+Below, we do this separately for Experiment 1 (E1) and Experiments 2-5(E2-5) due to differences in their structure. Firstly, E1 utilized a different set, and number (18) of items, compared to a set of 24 used throughout E2-5 (the two sets were non-overlapping, more can be found in the *Methods* section). Secondly, only E1 consisted of 2 sessions per participant, and one data-point 1 session, and not participant, as in E2-E5. A session-based check is more stringent, since averaging could hide the fact that a participant did not understand the instructions in only one of the experimental sessions. If we observe this, it would make a strong case for excluding such session from further analyses. 
+
+For this, we use the Spearman rank correlation, since we are mostly concerned whether the items were ranked correctly, but an alternative analysis using the Pearson coefficient will give almost identical results (see code chunk). We will be using a custom function *getSizeAcc* which creates a dataframe with necessary stats:
+
+```{r}
+#Size correlations for Experiment of choice:
+exp_num = 5
+method = 'spearman'  # alternatively, try 'pearson' 
+size_corrs = getSizeAccR(rall[[exp_num]], exp = exp_num, method =method) #creates a summary dataframe 
+
+#Median correlation:
+size_corrs%>% filter(size_est == median(size_est))
+
+#Mean and SD reported in the paper:
+size_corrs%>% 
+  summarise(mean_corr = mean(size_est),
+            std_corr = sd(size_est))
+
+
+```
+
+### Correlations between pre and post-task ratings
+
+Next, we will check the pre vs post rating consistencies for each experiment and domain:
+
+```{r}
+exp_num = 5
+getRatPrePostCor(rall[[exp_num]], exp = exp_num) %>% skim(pref_cor) #pref
+getRatPrePostCor(rall[[exp_num]], exp = exp_num) %>% skim(size_cor) #size
+```
+
+
+### Choice consistency
+
+Choice consistency was defined as the percentage of times the higher-rated item (according to the the pre-task ratings) was also chosen in the main task:
+
+```{r}
+# input experiment number
+exp = 5 
+
+#run summary function (RC in the function name stands for Rating-Choice)
+sumRCcons(data=all[[exp]], exp=exp)
+
+```
+
+The output table provides the mean, standard deviation, and t-test results, performed on session (E1) or participant (E2-E5) means. The t.test results indicate how likely are the observed probabilities given chance-level performance.
+
+### Judgment consistency
+Judgment consistency was defined the percentage of times the the higher rated item was assessed as more valuable in the judgment phase of the main task:
+
+```{r}
+# input experiment number
+exp = 4 
+
+#run summary function (RJ in the function name stands for Rating-Judgment)
+sumRJcons(data=all[[exp]], exp=exp)
+
+```
+
+## Effects of choices on ratings
+
+If choices have a lasting influence on evaluations, the amount of times an item was chosen should correlate with it's increase in value in the post-choice ratings. To test this intuition, we correlate amount of times an item was chosen in a given choice domain and the change in it's evaluation from before to after the task.
+
+We will use the difference between ratings number 3 and 1 as a measure of change (*post-pre value difference*). To control for a regression to the mean confound \cite{Chen2010,Izuma2013}, we compare these correlations with the correlations between choices and the difference in two pre-task ratings 2 and 1 (*pre-pre value difference*) using a paired t-tests. 
+
+For this analysis we concatenated the results from the 4 online experiments, since they contained the same number and identity of items:
+
+```{r}
+
+#create a summary table 
+rat_count = getRatDiffs(all, rall) %>% 
+  na.omit() #exclude participants who quit the task before the final item rating
+
+#explore:
+rat_count
+
+#
+```
+Each row of this new dataframe represents a single item for a single session. Columns *size_choice_num* and *pref_choice_num* represent how many times during the main task the item was selected. Following are rating difference columns, where *P* stands for preference rating, and *S* for size rating (*e.g.* *P3minP1* is the difference in rating between the third and first preference ratings).
+
+We can then correlate the choice frequency columns with rating difference columns:
+```{r}
+choice_cors = rat_count %>% group_by(subjID2) %>%
+    summarise(ss31 = cor(size_choice_num, S3minS1),
+              ss21 = cor(size_choice_num, S2minS1),
+              pp31 = cor(pref_choice_num, P3minP1),
+              pp21 = cor(pref_choice_num, P2minP1),
+              ps31 = cor(pref_choice_num, S3minS1),
+              ps21 = cor(pref_choice_num, S2minS1),
+              sp31 = cor(size_choice_num, P3minP1),
+              sp21 = cor(size_choice_num, P2minP1)) %>%
+  na.omit()
+  
+choice_cors
+```
+This results in a dataframe where each row represents a single experimental session, and the columns contain correlation values. The first 2 letters of column names represents choice and rating type respectively (*e.g. ss31* is the correlation between the number of size choices and the change in size ratings). The new subject identifier (subjID2) is a concatanation of the experiment and participant numbers separated by a space (*e.g. 2 10* is the 10th participant in E2).
+
+Let's look at the means and standard deviations of these correlations:
+```{r}
+choice_cors %>%
+  pivot_longer(names_to='cor_type', values_to='cor_val',cols = c(ss31, ss21, pp31, pp21, ps31, ps21, sp31, sp21)) %>%
+  group_by(cor_type) %>%
+  summarise(mean_cor = mean(cor_val),
+            sd_cor = sd(cor_val))
+```
+As expected, we can see that post-pre (31) correlations with choices tend to be greater than the control correlations *21* (especially for the the case of preference choice on preference value *pp* case). Finally, let's perform inferential statistics to see which of these differences are significant:
+
+```{r}
+choice_cors %>% 
+  mutate(ss = ss31-ss21, # create difference in correlation columns
+         pp = pp31-pp21,
+         ps = ps31-ps21,
+         sp = sp31-sp21,
+  ) %>% 
+  select(-ss31, -ss21, -pp31, -pp21, -ps31, -ps21, -sp31, -sp21 ) %>% # drop raw corr cols
+  pivot_longer(names_to = 'diff_type', values_to='diff_val',cols = c(ss,pp,ps,sp)) %>%
+  group_by(diff_type) %>%
+  summarise(mean(diff_val), #mean
+            sd(diff_val), #sd
+            t_df = t.test(diff_val, mu=0.0)$parameter, # t-test
+            t_score = t.test(diff_val, mu=0.0)$statistic,
+            p_value = round(t.test(diff_val, mu=0.0)$p.value,4),
+            cohenD = mean(diff_val)/sd(diff_val) # effect size (Cohen's D)
+            )
+
+```
+We observe a significant increase in choice-rating correlations for all conditions except for *ps*  (the effect preference choices on size evaluations). 
+
+
+
+
+## Bayesian Modelling: Within-Domain and Cross-Domain CIB
+
+Below is our implementation of hierarchical linear Bayesian models estimating *CIB* effects. In able to reproduce model fits, *brms* library is required.
+```{r}
+library(brms)
+```
+
+```{r}
+#CIB in E1 as a function of relevant predictors (see formula)
+m1 = brms::brm(data=all[[1]], cores = 2, file = 'm1a',  
+               prior = prior(normal(0, 25), class = "b"), 
+                           Cbias ~ con * judge_type2 + 
+                             (diffCon * con) + (diffInc * con) + (magInc * con) + (magCon * con)+
+                             (1+con+judge_type2 + diffCon + diffInc + magCon + magInc|subjID))
+#summary(m1)
+```
+
+```{r}
+m2 = brms::brm(data=all[[2]], cores = 2, file = 'm2', 
+               prior = prior(normal(0, 25), class = "b"), 
+                           Cbias ~ con * judge_type2 + 
+                             (diffCon * con) + (diffInc * con) + (magInc * con) + (magCon * con)+
+                             (1+con+judge_type2 + diffCon + diffInc + magCon + magInc|subjID))
+#summary(m2)
+```
+```{r}
+m3 = brms::brm(data=all[[3]], cores = 2, file = 'm3a',  prior = prior(normal(0, 25), class = "b"), 
+               Cbias ~ con * judge_type2 + 
+                 (diffCon * con) + (diffInc * con) + (magInc * con) + (magCon * con)+
+                 (1+con+judge_type2 + diffCon + diffInc + magCon + magInc|subjID)
+)
+```
+ 
+```{r}
+m4 = brms::brm(data=all[[4]], cores = 2,   prior = prior(normal(0, 10), class = "b"), save_pars = 'all',
+                 Cbias ~ con * judge_type2 + stay + 
+                   (diffCon * con) + (diffInc * con) + (magInc * con) + (magCon * con)+
+                   (1+con+judge_type2 +  diffCon +  diffInc + magCon + magInc|subjID)
+)
+```
+
+```{r}
+#reference bias
+m5a = brms::brm(data=all[[5]] %>% filter(dec_type=='no'), file = 'm5.1',
+                Pbias ~ judge_type2  + (judge_type2|subjID))
+#CIB
+m5 = brms::brm(data=tab, prior = prior = prior(normal(0, 25), class = "b"),  
+               CB_adj ~ con * judge_type2 * ref_type + (1|subjID))
+```
+
+
+### Example parameter analyses 
+Let's use EXP 2 as an example. There are different ways we can interact with the fitted model. For one, we can examine any conditional effects. For example, the effects of conflict (*i.e.,* how close in value the two items are) and magnitude (sum of values of the two items) (w/n: within-domain; c/s: cross-domain):
+
+```{r}
+#extract effects and interactions
+ce2 = brms::conditional_effects(m2)
+ce2$`con:judge_type2`
+
+```
+
+We can also test any specific hypotheses using the *hypothesis* function, *e.g.,* 
+```{r}
+# is the within-preference CIB  larger than 0 in EXP2?:
+hypothesis(m2, 'Intercept > 0') 
+# is the cross-size CIB  larger than 0 in EXP2?:
+hypothesis(m2, 'Intercept+judge_type2size+coninc+ `coninc:judge_type2size`  > 0') 
+# is the cross-domain preference CIB larger than the cross-domain size CIB?
+hypothesis(m2, 'Intercept+coninc   > Intercept+judge_type2size+coninc+ `coninc:judge_type2size`') 
+```
+
+We can also manually extract parameter distributions and make inferences based on them:
+```{r}
+# load EXP3 model if saved
+# m3 = readRDS('m3.rds')
+
+#extracting group-level effects of choice type and judgment type in EXP 3
+group_pars3 = m3 %>%
+  tidybayes::spread_draws(`b_.*`, regex = T) %>%
+  mutate(b_conV = b_Intercept,
+         b_conP = b_Intercept + b_judge_type2size,
+         b_incV = b_Intercept + b_coninc,
+         b_incP = b_Intercept + b_coninc + `b_coninc:judge_type2size` + b_judge_type2size,
+         b_forceV = b_Intercept + b_conneu,
+         b_forceP = b_Intercept + b_conneu + b_judge_type2size + `b_conneu:judge_type2size`
+  ) %>%
+  pivot_longer(cols = contains('b_'), names_to = 'parameter' ) %>%
+  select(parameter, value) %>%
+  mutate(exp = rep('E3'),
+         domain = if_else(parameter %in% c('b_conV','b_incV','b_forceV'), 'pref','size'),
+         con = if_else(parameter %in% c('b_conV','b_conP'), 'con', 
+                       if_else (parameter %in% c('b_incV', 'b_incP'), 'inc','neu'))
+)
+```
+
+```{r}
+ggplot(data = group_pars3%>%
+                filter(parameter %in% c('b_conV','b_conP','b_incV','b_incP','b_forceV','b_forceP')) %>%
+                mutate(`Choice-induced Bias`=value), 
+              aes(x = `Choice-induced Bias`, y = parameter, color = parameter, fill = parameter, group = con)) +
+  geom_rect(aes(xmin=-rope, xmax = rope, ymin=0, ymax = 7), fill = 'gray80', color = 'gray80', alpha = .1) + 
+  stat_eye(alpha = .5, size = 1) +
+  geom_vline(xintercept = 0, linetype = 'dashed') +
+  # scale_y_continuous(breaks = c(-0.5,0,.5)) +
+  #  scale_x_continuous(breaks = c(-3,0,3,6)) +
+  scale_y_discrete(limits = (c('b_conV','b_conP','b_incV','b_incP','b_forceV','b_forceP')),
+                   labels = c('pref\nw/n','size\nw/n','pref\nc/r','size\nc/r',
+                              'pref\nf/d','size\nf/d'))+
+  scale_fill_manual(values = c(col_ss, col_pp, 'steelblue','pink',col_ps ,col_sp)) +
+  scale_color_manual(values = c(col_ss, col_pp, 'steelblue','pink',col_ps ,col_sp)) +
+  theme(axis.ticks.x = element_blank()) +
+  coord_flip() +
+  theme(axis.title.y  = element_text()) +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5) ) +
+  ggtitle(label = 'Experiment 3', subtitle = 'Forced Choice')
+```

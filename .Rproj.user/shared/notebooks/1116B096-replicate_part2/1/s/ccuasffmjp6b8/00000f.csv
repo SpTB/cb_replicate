@@ -1,0 +1,14 @@
+"0","exp_num=3"
+"0","file_path = paste0(fitted_mods_path,'/params/paramsE',exp_num, '.csv')"
+"0","pars = read_csv(file_path)"
+"1","[1mRows: [22m[34m18000[39m [1mColumns: [22m[34m5[39m
+"
+"1","[36m──[39m [1mColumn specification[22m [36m───────────────────────────────────────────────────────────────────[39m
+[1mDelimiter:[22m "",""
+[31mchr[39m (4): parameter, domain, congruency, par_class
+[32mdbl[39m (1): value
+"
+"1","
+[36mℹ[39m Use `spec()` to retrieve the full column specification for this data.
+[36mℹ[39m Specify the column types or set `show_col_types = FALSE` to quiet this message.
+"

@@ -1,0 +1,16 @@
+"0","exp_num=2"
+"0","file_path = paste0(fitted_mods_path,'/preds/qual_preds_E',exp_num, '.csv')"
+"0","x = read_csv(file_path)"
+"1","[1mRows: [22m[34m13200[39m [1mColumns: [22m[34m62[39m
+"
+"1","[36m──[39m [1mColumn specification[22m [36m───────────────────────────────────────────────────────────────────[39m
+[1mDelimiter:[22m "",""
+[31mchr[39m  (3): judge_type, dec_type, con
+[32mdbl[39m (34): subjID, trial, dpred_full, dpred_cb, dpred_vu, jpred_full, jpred_cb, jpred_vu...
+[33mlgl[39m (25): acc, dpred_bin_full, acc_full, dpred_bin_cb, acc_cb, dpred_bin_vu, acc_vu, ac...
+"
+"1","
+[36mℹ[39m Use `spec()` to retrieve the full column specification for this data.
+[36mℹ[39m Specify the column types or set `show_col_types = FALSE` to quiet this message.
+"
+"0","x"

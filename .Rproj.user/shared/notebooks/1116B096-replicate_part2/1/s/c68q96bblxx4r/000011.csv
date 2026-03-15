@@ -1,0 +1,14 @@
+"0","exp_num=3"
+"0","file_path = paste0(fitted_mods_path,'/loo/loo_table_E',exp_num, '.csv')"
+"0","loo = read_csv(file_path)"
+"1","[1mRows: [22m[34m6[39m [1mColumns: [22m[34m4[39m
+"
+"1","[36m──[39m [1mColumn specification[22m [36m────────────────────────────────────────────────────────────────────[39m
+[1mDelimiter:[22m "",""
+[31mchr[39m (1): model
+[32mdbl[39m (3): loo, loo_SE, waic
+"
+"1","
+[36mℹ[39m Use `spec()` to retrieve the full column specification for this data.
+[36mℹ[39m Specify the column types or set `show_col_types = FALSE` to quiet this message.
+"

@@ -1,0 +1,3 @@
+"0","cib5 %>% group_by(con, judge_type2) %>% summarise(cib=mean(cib, na.rm=T))
+"
+"0",""

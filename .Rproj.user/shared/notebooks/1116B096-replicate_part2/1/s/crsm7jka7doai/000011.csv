@@ -1,0 +1,3 @@
+"0","pred_judg = x %>%"
+"0","  filter(judge_type>-1) %>%"
+"0","  group_by(subjID, judge_type) %>% summarise(jcor = cor(jpred_full, judgment, 'complete.obs'))"

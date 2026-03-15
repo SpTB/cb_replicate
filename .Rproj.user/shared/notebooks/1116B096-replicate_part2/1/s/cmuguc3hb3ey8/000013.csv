@@ -1,0 +1,6 @@
+"0","pred_judg %>% "
+"0","  group_by(subjID, judge_type) %>%"
+"0","  summarise(cor = mean(jcor, na.rm=T)) %>% "
+"0","  group_by(judge_type) %>% "
+"0","  summarise(cor_mean = mean(cor),"
+"0","            cor_sd = sd(cor))"

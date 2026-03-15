@@ -1,0 +1,20 @@
+"0","setGGoptions()"
+"2","Warning:"
+"2"," [38;5;232mThe `size` argument of `element_line()` is deprecated as of ggplot2 3.4.0.
+[36mℹ[38;5;232m Please use the `linewidth` argument instead.
+[36mℹ[38;5;232m The deprecated feature was likely used in the [34mwztools[38;5;232m package.
+  Please report the issue at [3m[34m<]8;;https://github.com/SpTB/wztools/issueshttps://github.com/SpTB/wztools/issues]8;;>[38;5;232m[23m.
+[90mThis warning is displayed once per session.[38;5;232m
+[90mCall ]8;;ide:run:lifecycle::last_lifecycle_warnings()lifecycle::last_lifecycle_warnings()]8;; to see where this warning was generated.[38;5;232m[39m
+"
+"0","red1  ='#D54646'"
+"0","red2  ='#F8766D'"
+"0","red3 = '#fc9272'"
+"0","blue1 ='#235FB9'"
+"0","blue2 ='#00BFC4'"
+"0","blue3 = 'lightblue'"
+"0","ctrue = '#1b9e77' #for data"
+"0","cfull= '#e7298a' #for full model predictions"
+"0","ccb = '#d95f02' #for CB-only model predictions"
+"0","cvu = '#7570b3' #for VU-only model predictions"
+"0","main_cols=c('#D54646','#F8766D','#235FB9','#00BFC4')"
