@@ -1,5 +1,0 @@
-"0","choice_cors %>%"
-"0","  pivot_longer(names_to='cor_type', values_to='cor_val',cols = c(ss31, ss21, pp31, pp21, ps31, ps21, sp31, sp21)) %>%"
-"0","  group_by(cor_type) %>%"
-"0","  summarise(mean_cor = mean(cor_val),"
-"0","            sd_cor = sd(cor_val))"

@@ -1,0 +1,67 @@
+---
+title: "demo"
+author: "Wojciech Zajkowski"
+date: "2026-03-15"
+output: html_document
+---
+
+# Demo: How to Run the Reproducibility Workflow 
+
+This demo provides minimal steps to run key parts of the codebase with included data. Full reproducibility pipeline can be found in the `replicate_part1.Rmd` and `replicate_part2.Rmd`files.
+
+## Inputs used in the demo
+
+- Behavioral datasets from `0.data/` loaded via helper functions.
+- Precomputed model outputs from `2.models/fits/loo/` and `2.models/fits/preds/`.
+
+## Demo A: Behavioral replication checks
+
+Run in R from repository root:
+
+```{r}
+library(tidyverse)
+library(cibtools)
+library(wztools)
+source("1.scripts/helper_funcs.R")
+
+all <- getDataR(type = "main", path = "0.data")
+rall <- getDataR(type = "rat", path = "0.data")
+
+# Example: size-rating vs objective-size consistency for Experiment 5
+size_corrs <- getSizeAccR(rall[[5]], exp = 5, method = "spearman", path = "0.data")
+summary(size_corrs$size_est)
+```
+
+
+### Typical runtime
+
+- Data loading + one summary check: **<1 minute** on a current computer.
+
+## Demo B: Model output replication checks (without refitting)
+
+Run in R:
+
+```{r}
+library(tidyverse)
+
+loo_e2 <- read_csv("2.models/fits/loo/loo_table_E2.csv")
+preds_e2 <- read_csv("2.models/fits/preds/qual_preds_E2.csv")
+
+print(loo_e2)
+print(head(preds_e2))
+```
+
+
+### Typical runtime
+
+- Loading precomputed `.csv` model outputs: **<1 minute**.
+
+## Optional: Full notebook execution
+
+- `replicate_part1.Rmd` (behavioral analyses): typically minutes to tens of minutes depending on environment.
+- `replicate_part2.Rmd` (model-based analyses using saved outputs): typically minutes.
+- Full model **refitting** is computationally heavier and may take substantially longer (hours) depending on hardware and settings.
+
+## Reproducibility expectation
+
+Running the demo commands should reproduce key summary structures and loaded model output tables using the included datasets.

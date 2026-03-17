@@ -1,5 +1,0 @@
-"0","# input experiment number"
-"0","exp = 5 "
-"0",""
-"0","#run summary function (RC in the function name stands for Rating-Choice)"
-"0","sumRCcons(data=all[[exp]], exp=exp)"

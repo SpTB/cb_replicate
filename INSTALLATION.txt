@@ -1,0 +1,64 @@
+# Installation Guide
+
+## Supported operating systems
+
+Tested for reproducibility workflows on:
+
+- macOS (Intel/Apple Silicon)
+- Linux (Ubuntu 22.04+)
+- Windows 10/11 (RTools required for some packages)
+
+## Programming language and runtime
+
+- **Language**: R
+- **Recommended R version**: R >= 4.2
+
+## Required software dependencies
+
+Core dependencies used directly in notebooks/scripts include:
+
+- `tidyverse`
+- `devtools`
+- `cibtools` (GitHub)
+- `wztools` (GitHub)
+
+Optional dependencies:
+- `skimr`
+- `brms`
+- `loo`
+- `posterior`
+
+
+Install in R:
+
+```r
+install.packages(c("tidyverse", "skimr", "brms", "loo", "posterior", "devtools"))
+devtools::install_github("SpTB/cibtools")
+devtools::install_github("SpTB/wztools")
+```
+
+## Non-standard hardware/resources
+
+- **Behavioral analyses** (Part 1): standard laptop/desktop resources are sufficient.
+- **Bayesian modeling / full refits** (`brms`/Stan): multi-core CPU and substantial RAM are recommended; runtime increases strongly with chain count and model complexity.
+- This repository includes precomputed model fit outputs in `2.models/fits/` to avoid heavy recomputation for routine reproducibility checks.
+
+## Typical installation time
+
+On a current computer with broadband internet:
+
+- Base R package installation: ~5-15 minutes.
+- GitHub package installation (`cibtools`, `wztools`): ~2-10 minutes.
+- Total typical setup time: **~10-30 minutes**.
+
+## Quick installation validation
+
+From repository root:
+
+```r
+source("1.scripts/helper_funcs.R")
+all <- getDataR(type = "main", path = "0.data")
+stopifnot(length(all) == 5)
+```
+
+Expected result: script runs without error and returns five experiments.

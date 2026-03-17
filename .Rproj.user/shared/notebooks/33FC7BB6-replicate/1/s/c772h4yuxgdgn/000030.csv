@@ -1,5 +1,0 @@
-"0",""
-"0","#Mean and SD reported in the paper:"
-"0","size_corrs%>% "
-"0","  summarise(mean_corr = mean(size_est),"
-"0","            std_corr = sd(size_est))"

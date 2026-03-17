@@ -29,7 +29,10 @@ source('1.scripts/helper_funcs.R')
 
 # set loading and output graphics
 wztools::setOptions() 
-
+col_ss = '#235FB9'
+col_ps = '#00BFC4'
+col_pp = '#D54646'
+col-sp = '#F8766D'
 # get data
 data_path = '0.data'
 all = getDataR(type='main', path = data_path) # main task data
@@ -349,6 +352,7 @@ group_pars3 = m3 %>%
 ```
 
 ```{r}
+rope = 2
 ggplot(data = group_pars3%>%
                 filter(parameter %in% c('b_conV','b_conP','b_incV','b_incP','b_forceV','b_forceP')) %>%
                 mutate(`Choice-induced Bias`=value), 

@@ -1,5 +1,0 @@
-"0","# input experiment number"
-"0","exp = 4 "
-"0",""
-"0","#run summary function (RJ in the function name stands for Rating-Judgment)"
-"0","sumRJcons(data=all[[exp]], exp=exp)"
